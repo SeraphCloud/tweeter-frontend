@@ -17,9 +17,9 @@ export default function Composer({
 	}
 
 	return (
-		<div className="bg-white border border-neutral-200 rounded-2xl p-4">
+		<div className="bg-card border border-border rounded-2xl p-4">
 			<textarea
-				className="w-full resize-none outline-none text-sm"
+				className="w-full bg-transparent resize-none outline-none text-sm text-white placeholder:text-muted focus:ring-0"
 				rows={3}
 				placeholder="O que está acontecendo?"
 				value={content}
@@ -32,7 +32,7 @@ export default function Composer({
 					type="button"
 					onClick={submit}
 					disabled={loading || !content.trim()}
-					className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium disabled:opacity-50 hover:bg-blue-700"
+					className="cursor-pointer px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium disabled:opacity-50 hover:bg-blue-700"
 				>
 					{loading ? "Postando..." : "Postar"}
 				</button>

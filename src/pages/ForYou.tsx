@@ -2,45 +2,37 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as postsApi from "../api/posts";
 import * as profilesApi from "../api/profiles";
 import Composer from "../components/Composer";
-import PostCard from "../components/PostCard";
 import Layout from "../components/Layout";
 
-function getErrorMessage(err: unknown): string {
-	if (typeof err === "string") return err;
-	if (err && typeof err === "object") {
-		const e = err as Record<string, unknown>;
-		const { detail } = e;
-		if (typeof detail === "string") return detail;
-	}
-	return "Não foi possível carregar o feed.";
+function formatDate(iso: string) {
+	return new Date(iso).toLocaleDateString();
 }
 
-export default function Feed() {
+export default function ForYou() {
 	const [posts, setPosts] = useState<postsApi.Post[]>([]);
 	const [profiles, setProfiles] = useState<Record<number, profilesApi.Profile>>(
 		{},
 	);
+	const [loading, setLoading] = useState(false);
+	const [posting, setPosting] = useState(false);
+	const [error, setError] = useState<string | null>(null);
 
-	const profilesRef = useRef<Record<number, profilesApi.Profile>>({});
+	const profilesRef = useRef(profiles);
+
 	useEffect(() => {
 		profilesRef.current = profiles;
 	}, [profiles]);
 
-	const [loading, setLoading] = useState(true);
-	const [posting, setPosting] = useState(false);
-	const [error, setError] = useState<string | null>(null);
-
 	const load = useCallback(async () => {
 		setLoading(true);
 		setError(null);
-		console.log("feed load() called");
 
 		try {
-			const data = await postsApi.getFeed();
+			const data = await postsApi.listAll();
 			setPosts(data);
 
 			const authorIds = Array.from(new Set(data.map((p) => p.author)));
-			const missing = authorIds.filter((id) => !profiles[id]);
+			const missing = authorIds.filter((id) => !profilesRef.current[id]);
 
 			if (missing.length) {
 				const fetched = await Promise.all(
@@ -52,12 +44,12 @@ export default function Feed() {
 					return next;
 				});
 			}
-		} catch (err: unknown) {
-			setError(getErrorMessage(err));
+		} catch {
+			setError("Não foi possível carregar a For You.");
 		} finally {
 			setLoading(false);
 		}
-	}, [profiles]);
+	}, []);
 
 	useEffect(() => {
 		load();
@@ -65,41 +57,26 @@ export default function Feed() {
 
 	async function onPost(content: string) {
 		setPosting(true);
+
 		try {
 			const created = await postsApi.createPost(content);
 			setPosts((prev) => [created, ...prev]);
-
-			if (!profiles[created.author]) {
-				const prof = await profilesApi.getProfile(created.author);
-				setProfiles((prev) => ({ ...prev, [prof.id]: prof }));
-			}
 		} finally {
 			setPosting(false);
 		}
 	}
 
-	function bumpCommentsCount(postId: number) {
-		setPosts((prev) =>
-			prev.map((p) =>
-				p.id === postId ? { ...p, comments_count: p.comments_count + 1 } : p,
-			),
-		);
-
-		setTimeout(() => {
-			load();
-		}, 400);
-	}
-
-	const view = useMemo(() => {
-		return posts.map((p) => ({ post: p, profile: profiles[p.author] }));
-	}, [posts, profiles]);
+	const view = useMemo(
+		() => posts.map((p) => ({ post: p, profile: profiles[p.author] })),
+		[posts, profiles],
+	);
 
 	return (
 		<Layout>
 			<div className="min-h-screen bg-neutral-50">
 				<div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
 					<div className="flex items-center justify-between">
-						<h1 className="text-xl font-semibold">Seu Feed</h1>
+						<h1 className="text-xl font-semibold">For You</h1>
 						<button
 							type="button"
 							onClick={load}
@@ -115,19 +92,43 @@ export default function Feed() {
 					{error && <p className="text-sm text-red-600">{error}</p>}
 
 					{!loading && !error && posts.length === 0 && (
-						<p className="text-sm text-neutral-500">
-							Seu feed está vazio. Siga pessoas para ver postagens.
-						</p>
+						<p className="text-sm text-neutral-500">Ainda não há posts.</p>
 					)}
 
 					<div className="space-y-4">
 						{view.map(({ post, profile }) => (
-							<PostCard
+							<div
 								key={post.id}
-								post={post}
-								profile={profile}
-								onReload={bumpCommentsCount}
-							/>
+								className="bg-white border border-neutral-200 rounded-2xl p-4"
+							>
+								<div className="flex items-start gap-3">
+									<div className="h-10 w-10 rounded-full bg-neutral-200 shrink-0" />
+									<div className="min-w-0 flex-1">
+										<div className="flex items-center gap-2 flex-wrap">
+											<span className="font-semibold text-sm">
+												{profile?.display_name ||
+													profile?.username ||
+													`User #${post.author}`}
+											</span>
+											<span className="text-xs text-neutral-500">
+												@{profile?.username || `id_${post.author}`}
+											</span>
+											<span className="text-xs text-neutral-400">
+												• {formatDate(post.created_at)}
+											</span>
+										</div>
+
+										<p className="text-sm mt-2 whitespace-pre-wrap">
+											{post.content}
+										</p>
+
+										<div className="flex gap-4 mt-3 text-sm text-neutral-600">
+											<span>❤️ {post.likes_count}</span>
+											<span>💬 {post.comments_count}</span>
+										</div>
+									</div>
+								</div>
+							</div>
 						))}
 					</div>
 				</div>

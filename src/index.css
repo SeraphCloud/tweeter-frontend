@@ -1,1 +1,8 @@
-@import "tailwindcss"; 
+@config "../tailwind.config.ts";
+@import "tailwindcss";
+
+@layer base {
+  body {
+    @apply bg-dark text-white font-display;
+  }
+}

@@ -7,7 +7,12 @@ export type Post = {
 	created_at: string;
 	likes_count: number;
 	comments_count: number;
+	is_liked: boolean;
 };
+
+export async function listAll(): Promise<Post[]> {
+	return api<Post[]>("/api/posts/");
+}
 
 export async function getFeed(): Promise<Post[]> {
 	return api<Post[]>("/api/posts/feed/");
