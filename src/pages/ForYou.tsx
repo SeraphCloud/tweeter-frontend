@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as postsApi from "../api/posts";
 import * as profilesApi from "../api/profiles";
 import Composer from "../components/Composer";
-import Layout from "../components/Layout";
+import Layout from "../components/LeftAside";
 
 function formatDate(iso: string) {
 	return new Date(iso).toLocaleDateString();

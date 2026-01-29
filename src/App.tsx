@@ -1,11 +1,11 @@
 import { Route, Routes } from "react-router-dom";
 import { ProtectedRoute } from "./auth/ProtectedRoute";
-import Feed from "./pages/Feed";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
-import ForYou from "./pages/ForYou";
-import Profile from "./pages/Profile";
 import HomeRedirect from "./HomeRedirect";
+import Feed from "./pages/Feed";
+import ForYou from "./pages/ForYou";
+import Login from "./pages/Login";
+import Profile from "./pages/Profile";
+import Register from "./pages/Register";
 
 export default function App() {
 	return (

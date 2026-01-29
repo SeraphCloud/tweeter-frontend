@@ -3,7 +3,10 @@ import * as postsApi from "../api/posts";
 import * as profilesApi from "../api/profiles";
 import Composer from "../components/Composer";
 import PostCard from "../components/PostCard";
-import Layout from "../components/Layout";
+import LeftAside from "../components/LeftAside";
+import RightSidebar from "../components/RightSidebar";
+import TestUsersCreator from "../components/TestUsersCreator";
+import DebugApi from "../components/DebugApi";
 
 function getErrorMessage(err: unknown): string {
 	if (typeof err === "string") return err;
@@ -95,8 +98,12 @@ export default function Feed() {
 	}, [posts, profiles]);
 
 	return (
-		<Layout>
-			<div className="min-h-screen bg-neutral-50">
+		<div className="min-h-screen bg-dark">
+			<LeftAside />
+			<RightSidebar />
+			<TestUsersCreator />
+			<DebugApi />
+			<div className="ml-64 mr-80">
 				<div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
 					<div className="flex items-center justify-between">
 						<h1 className="text-xl font-semibold">Seu Feed</h1>
@@ -132,6 +139,6 @@ export default function Feed() {
 					</div>
 				</div>
 			</div>
-		</Layout>
+		</div>
 	);
 }

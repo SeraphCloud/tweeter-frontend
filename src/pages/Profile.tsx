@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 import * as postsApi from "../api/posts";
 import * as profilesApi from "../api/profiles";
 import * as followApi from "../api/follow";
-import Layout from "../components/Layout";
+import Layout from "../components/LeftAside";
 
 export default function Profile() {
 	const { id } = useParams();
