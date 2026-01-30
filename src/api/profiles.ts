@@ -5,6 +5,7 @@ export type Profile = {
 	username: string;
 	display_name: string | null;
 	avatar: string | null;
+	following_ids: number[];
 };
 
 export async function getProfile(id: number): Promise<Profile> {

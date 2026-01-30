@@ -2,11 +2,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as postsApi from "../api/posts";
 import * as profilesApi from "../api/profiles";
 import Composer from "../components/Composer";
-import Layout from "../components/LeftAside";
-
-function formatDate(iso: string) {
-	return new Date(iso).toLocaleDateString();
-}
+import LeftAside from "../components/LeftAside";
+import RightSidebar from "../components/RightSidebar";
+import PostCard from "../components/PostCard";
 
 export default function ForYou() {
 	const [posts, setPosts] = useState<postsApi.Post[]>([]);
@@ -66,14 +64,28 @@ export default function ForYou() {
 		}
 	}
 
+	function bumpCommentsCount(postId: number) {
+		setPosts((prev) =>
+			prev.map((p) =>
+				p.id === postId ? { ...p, comments_count: p.comments_count + 1 } : p,
+			),
+		);
+
+		setTimeout(() => {
+			load();
+		}, 400);
+	}
+
 	const view = useMemo(
 		() => posts.map((p) => ({ post: p, profile: profiles[p.author] })),
 		[posts, profiles],
 	);
 
 	return (
-		<Layout>
-			<div className="min-h-screen bg-neutral-50">
+		<>
+			<LeftAside />
+			<RightSidebar />
+			<div className="min-h-screen bg-dark">
 				<div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
 					<div className="flex items-center justify-between">
 						<h1 className="text-xl font-semibold">For You</h1>
@@ -97,42 +109,16 @@ export default function ForYou() {
 
 					<div className="space-y-4">
 						{view.map(({ post, profile }) => (
-							<div
+							<PostCard
 								key={post.id}
-								className="bg-white border border-neutral-200 rounded-2xl p-4"
-							>
-								<div className="flex items-start gap-3">
-									<div className="h-10 w-10 rounded-full bg-neutral-200 shrink-0" />
-									<div className="min-w-0 flex-1">
-										<div className="flex items-center gap-2 flex-wrap">
-											<span className="font-semibold text-sm">
-												{profile?.display_name ||
-													profile?.username ||
-													`User #${post.author}`}
-											</span>
-											<span className="text-xs text-neutral-500">
-												@{profile?.username || `id_${post.author}`}
-											</span>
-											<span className="text-xs text-neutral-400">
-												• {formatDate(post.created_at)}
-											</span>
-										</div>
-
-										<p className="text-sm mt-2 whitespace-pre-wrap">
-											{post.content}
-										</p>
-
-										<div className="flex gap-4 mt-3 text-sm text-neutral-600">
-											<span>❤️ {post.likes_count}</span>
-											<span>💬 {post.comments_count}</span>
-										</div>
-									</div>
-								</div>
-							</div>
+								post={post}
+								profile={profile}
+								onReload={bumpCommentsCount}
+							/>
 						))}
 					</div>
 				</div>
 			</div>
-		</Layout>
+		</>
 	);
 }
