@@ -7,6 +7,7 @@ import {
   useLikePostMutation,
   useDislikePostMutation,
 } from '../../features/posts/postsApi';
+import { useGetMyProfileQuery } from '../../features/profiles/profilesApi';
 import {
   Container,
   Header,
@@ -29,6 +30,9 @@ export default function Explore() {
   const [createPostApi] = useCreatePostMutation();
   const [likePostApi] = useLikePostMutation();
   const [dislikePostApi] = useDislikePostMutation();
+
+  // Get current user profile for Composer
+  const { data: currentUser } = useGetMyProfileQuery();
 
   const handleCreatePost = async (content: string) => {
     try {
@@ -64,7 +68,12 @@ export default function Explore() {
         <Title>Explorar</Title>
       </Header>
 
-      <Composer onSubmit={handleCreatePost} isLoading={false} />
+      <Composer
+        avatarUrl={currentUser?.avatar}
+        displayName={currentUser?.display_name || currentUser?.username}
+        onSubmit={handleCreatePost}
+        isLoading={false}
+      />
 
       {isLoading && (
         <LoadingContainer>

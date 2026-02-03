@@ -13,6 +13,7 @@ import {
   useGetCommentsByPostQuery,
   useCreateCommentMutation,
 } from '../../features/comments/commentsApi';
+import { useGetMyProfileQuery, useGetProfileQuery } from '../../features/profiles/profilesApi';
 import {
   Container,
   Header,
@@ -45,6 +46,15 @@ export default function PostDetail() {
     refetch: refetchComments,
   } = useGetCommentsByPostQuery(postId, {
     skip: !postId,
+  });
+
+  // Get current user profile for CommentForm
+  const { data: currentUser } = useGetMyProfileQuery();
+
+  // Get author profile for post (ensure authorId is a number)
+  const postAuthorId = apiPost?.author || 0;
+  const { data: postAuthor } = useGetProfileQuery(postAuthorId, {
+    skip: !apiPost?.author,
   });
 
   const [likePostApi] = useLikePostMutation();
@@ -149,6 +159,8 @@ export default function PostDetail() {
       <PostCard post={post} onLikeToggle={handleLikeToggle} />
 
       <CommentForm
+        avatarUrl={currentUser?.avatar}
+        displayName={currentUser?.display_name || currentUser?.username}
         onSubmit={handleCommentSubmit}
         isLoading={false}
         placeholder="Tweete sua resposta"
@@ -156,7 +168,15 @@ export default function PostDetail() {
 
       <CommentList
         comments={comments}
-        getAuthor={() => undefined}
+        getAuthor={(userId) => {
+          // Use the post author for the post author
+          if (userId === post?.author) {
+            return postAuthor;
+          }
+          // For other users, we need to fetch their profiles
+          // This is a simplified approach - in production, you'd want to batch these requests
+          return undefined;
+        }}
         isLoading={false}
         error={null}
       />

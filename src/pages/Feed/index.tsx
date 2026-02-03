@@ -9,6 +9,7 @@ import {
   useLikePostMutation,
   useDislikePostMutation,
 } from '../../features/posts/postsApi';
+import { useGetMyProfileQuery } from '../../features/profiles/profilesApi';
 import {
   Container,
   Header,
@@ -33,6 +34,9 @@ export default function Feed() {
   const [createPostApi] = useCreatePostMutation();
   const [likePostApi] = useLikePostMutation();
   const [dislikePostApi] = useDislikePostMutation();
+
+  // Get current user profile for Composer
+  const { data: currentUser } = useGetMyProfileQuery();
 
   const handleCreatePost = useCallback(
     async (content: string) => {
@@ -77,6 +81,8 @@ export default function Feed() {
       </Header>
 
       <Composer
+        avatarUrl={currentUser?.avatar}
+        displayName={currentUser?.display_name || currentUser?.username}
         onSubmit={handleCreatePost}
         isLoading={false}
       />

@@ -1,17 +1,23 @@
 import { Link } from 'react-router-dom';
 import { Avatar } from '../ui/Avatar';
 import { Badge } from '../ui/Badge';
+import { useGetMyProfileQuery, useGetFollowersQuery, useGetFollowingQuery } from '../../features/profiles/profilesApi';
 import * as S from './styles';
 
 export function RightRail() {
-  // Mock data - in real app would come from auth state
-  const user = {
-    name: 'Victor Silva',
-    handle: '@victor',
-    avatar: null,
-    following: 42,
-    followers: 128,
-  };
+  const { data: profile } = useGetMyProfileQuery();
+  
+  // Ensure profileId is a number or 0 for the query
+  const profileId = profile?.id || 0;
+  const { data: followers } = useGetFollowersQuery(profileId, { skip: !profile?.id });
+  const { data: following } = useGetFollowingQuery(profileId, { skip: !profile?.id });
+
+  // Default values while loading
+  const userName = profile?.display_name || profile?.username || 'Usuário';
+  const userHandle = `@${profile?.username || 'usuario'}`;
+  const userAvatar = profile?.avatar;
+  const followersCount = followers?.length || 0;
+  const followingCount = following?.length || 0;
 
   const trending = [
     { category: 'Tecnologia', topic: '#React', posts: '12.5K posts' },
@@ -24,19 +30,19 @@ export function RightRail() {
     <S.RightRailContainer>
       <S.ProfileCard>
         <S.ProfileCover />
-        <Avatar name={user.name} size="lg" />
-        <S.ProfileName as={Link} to="/me">{user.name}</S.ProfileName>
-        <S.ProfileHandle>{user.handle}</S.ProfileHandle>
+        <Avatar src={userAvatar} name={userName} size="lg" />
+        <S.ProfileName as={Link} to="/me">{userName}</S.ProfileName>
+        <S.ProfileHandle>{userHandle}</S.ProfileHandle>
         <Badge variant="primary" size="sm">
           Pro
         </Badge>
         <S.ProfileStats>
           <S.StatItem as={Link} to="/me/following">
-            <S.StatValue>{user.following}</S.StatValue>
+            <S.StatValue>{followingCount}</S.StatValue>
             <S.StatLabel>Seguindo</S.StatLabel>
           </S.StatItem>
           <S.StatItem as={Link} to="/me/followers">
-            <S.StatValue>{user.followers}</S.StatValue>
+            <S.StatValue>{followersCount}</S.StatValue>
             <S.StatLabel>Seguidores</S.StatLabel>
           </S.StatItem>
         </S.ProfileStats>
