@@ -1,5 +1,5 @@
-import type { Comment } from '../../mocks/mockComments';
-import type { Profile } from '../../mocks/mockProfiles';
+import type { Comment } from '../../features/comments/commentsTypes';
+import type { Profile } from '../../features/profiles/profilesTypes';
 import { CommentItem } from './CommentItem';
 import { Loader } from '../ui/Loader';
 import * as S from './styles';

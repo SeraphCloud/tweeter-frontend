@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
-import type { Comment } from '../../mocks/mockComments';
-import type { Profile } from '../../mocks/mockProfiles';
+import type { Comment } from '../../features/comments/commentsTypes';
+import type { Profile } from '../../features/profiles/profilesTypes';
 import { Avatar } from '../ui/Avatar';
 import { formatRelativeTime } from '../../utils/date';
 import * as S from './styles';
