@@ -6,9 +6,7 @@ import { Loader } from '../../components/ui/Loader';
 import { Avatar } from '../../components/ui/Avatar';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
-import { USE_MOCKS } from '../../utils/env';
 import { getErrorMessage } from '../../utils/errorHandling';
-import type { Profile } from '../../mocks/mockProfiles';
 import {
   useGetProfileQuery,
   useGetMyProfileQuery,
@@ -19,9 +17,6 @@ import {
   useUpdateMyProfileMutation,
 } from '../../features/profiles/profilesApi';
 import { useGetFeedQuery } from '../../features/posts/postsApi';
-import { useAppSelector, useAppDispatch } from '../../app/hooks';
-import { mockDelay } from '../../mocks';
-import { updateProfile, followProfile, unfollowProfile } from '../../features/mocks/mocksSlice';
 import {
   Container,
   Header,
@@ -32,7 +27,6 @@ import {
   ProfileHeader,
   AvatarSection,
   AvatarWrapper,
-  AvatarImage,
   ProfileInfo,
   DisplayName,
   Username,
@@ -65,31 +59,15 @@ import {
   CameraIcon,
 } from './styles';
 
-// Mock current user ID (simulating logged in user)
-const MOCK_CURRENT_USER_ID = 1;
-
-// Helper to get profile by id from Redux state
-function getProfileById(id: number, profiles: Profile[]): Profile | undefined {
-  return profiles.find((p) => p.id === id);
-}
-
 export default function Profile() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const dispatch = useAppDispatch();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Determine if this is "my profile" edit mode (route /me) or public profile (route /profile/:id)
   const isMyProfileMode = id === undefined;
-  const profileId = isMyProfileMode ? MOCK_CURRENT_USER_ID : Number(id);
+  const profileId = Number(id || 0);
 
-  // Redux state for mock mode
-  const mockProfiles = useAppSelector((state) => state.mocks.profiles);
-  const mockPosts = useAppSelector((state) => state.mocks.posts);
-
-  // State for mock mode
-  const [mockLoading, setMockLoading] = useState(USE_MOCKS);
-  const [mockFollowLoading, setMockFollowLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'posts' | 'followers' | 'following'>('posts');
 
   // Edit form state (only used in /me mode)
@@ -98,71 +76,45 @@ export default function Profile() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
-  const [mockSaving, setMockSaving] = useState(false);
-  
+
   // Password state
   const [currentPass, setCurrentPass] = useState('');
   const [newPass, setNewPass] = useState('');
   const [confirmPass, setConfirmPass] = useState('');
 
-  // RTK Query hooks (used when USE_MOCKS=false)
+  // RTK Query hooks
   const {
     data: apiProfile,
     isLoading: apiProfileLoading,
     error: apiProfileError,
   } = useGetProfileQuery(profileId, {
-    skip: USE_MOCKS || !profileId,
+    skip: !profileId,
   });
 
   const {
     data: apiMyProfile,
     isLoading: apiMyProfileLoading,
   } = useGetMyProfileQuery(undefined, {
-    skip: USE_MOCKS || !isMyProfileMode,
+    skip: !isMyProfileMode,
   });
 
-  const { data: apiPosts } = useGetFeedQuery(undefined, {
-    skip: USE_MOCKS,
-  });
+  const { data: apiPosts } = useGetFeedQuery(undefined);
 
   const { data: apiFollowers } = useGetFollowersQuery(profileId, {
-    skip: USE_MOCKS || !profileId,
+    skip: !profileId,
   });
 
   const { data: apiFollowing } = useGetFollowingQuery(profileId, {
-    skip: USE_MOCKS || !profileId,
+    skip: !profileId,
   });
 
   const [followProfileApi] = useFollowProfileMutation();
   const [unfollowProfileApi] = useUnfollowProfileMutation();
   const [updateProfileApi, { isLoading: apiSaving }] = useUpdateMyProfileMutation();
 
-  // Load mock data on mount
-  useEffect(() => {
-    if (!USE_MOCKS) return;
-
-    let cancelled = false;
-
-    const loadData = async () => {
-      await mockDelay();
-      if (!cancelled) {
-        const profile = getProfileById(profileId, mockProfiles);
-        setDisplayName(profile?.display_name ?? '');
-        setMockLoading(false);
-      }
-    };
-
-    void loadData();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [profileId, mockProfiles]);
-
   // Initialize display name from API profile when loading completes
   useEffect(() => {
-    if (!USE_MOCKS && !apiMyProfileLoading && apiMyProfile) {
-      // Use requestAnimationFrame to avoid cascading renders warning
+    if (!apiMyProfileLoading && apiMyProfile) {
       requestAnimationFrame(() => {
         setDisplayName(apiMyProfile.display_name);
       });
@@ -213,7 +165,7 @@ export default function Profile() {
         return;
       }
 
-      // Password validation (se algum campo foi preenchido)
+      // Password validation (if any field was filled)
       if (currentPass || newPass || confirmPass) {
         if (!currentPass) {
           setFormError('A senha atual é obrigatória.');
@@ -237,112 +189,61 @@ export default function Profile() {
         }
       }
 
-      if (USE_MOCKS) {
-        setMockSaving(true);
-        await mockDelay();
+      try {
+        const formData: {
+          display_name?: string;
+          avatar?: File;
+          current_password?: string;
+          new_password?: string;
+        } = {
+          display_name: displayName.trim(),
+        };
 
-        const currentUser = getProfileById(MOCK_CURRENT_USER_ID, mockProfiles);
-        if (!currentUser) {
-          setFormError('Usuário não encontrado.');
-          setMockSaving(false);
-          return;
+        if (selectedFile) {
+          formData.avatar = selectedFile;
         }
 
-        // Simulate avatar upload
-        let avatarUrl = currentUser.avatar;
-        if (selectedFile && previewUrl) {
-          // In a real scenario, this would be a URL from server
-          avatarUrl = previewUrl;
+        if (currentPass && newPass) {
+          formData.current_password = currentPass;
+          formData.new_password = newPass;
         }
 
-        dispatch(
-          updateProfile({
-            ...currentUser,
-            display_name: displayName.trim(),
-            avatar: avatarUrl,
-          })
-        );
-setMockSaving(false);
-setSuccessMessage('Perfil atualizado com sucesso!');
-setSelectedFile(null);
-setPreviewUrl(null);
-setCurrentPass('');
-setNewPass('');
-setConfirmPass('');
-} else {
-try {
-  const formData: {
-    display_name?: string;
-    avatar?: File;
-    current_password?: string;
-    new_password?: string;
-  } = {
-    display_name: displayName.trim(),
-  };
-
-  if (selectedFile) {
-    formData.avatar = selectedFile;
-  }
-
-  if (currentPass && newPass) {
-    formData.current_password = currentPass;
-    formData.new_password = newPass;
-  }
-
-  await updateProfileApi(formData).unwrap();
-  setSuccessMessage('Perfil atualizado com sucesso!');
-  setSelectedFile(null);
-  setPreviewUrl(null);
-  setCurrentPass('');
-  setNewPass('');
-  setConfirmPass('');
-} catch (err) {
-  const error = err as { data?: unknown; message?: string };
-  setFormError(getErrorMessage(error));
-}
-}
-},
-[displayName, selectedFile, previewUrl, updateProfileApi, mockProfiles, dispatch, currentPass, setCurrentPass, newPass, setNewPass, confirmPass, setConfirmPass]
-);
+        await updateProfileApi(formData).unwrap();
+        setSuccessMessage('Perfil atualizado com sucesso!');
+        setSelectedFile(null);
+        setPreviewUrl(null);
+        setCurrentPass('');
+        setNewPass('');
+        setConfirmPass('');
+      } catch (err) {
+        const error = err as { data?: unknown; message?: string };
+        setFormError(getErrorMessage(error));
+      }
+    },
+    [displayName, selectedFile, previewUrl, updateProfileApi, currentPass, newPass, confirmPass]
+  );
 
   // Determine if current user is following this profile
   const isFollowing = useMemo(() => {
-    if (USE_MOCKS) {
-      const currentUser = getProfileById(MOCK_CURRENT_USER_ID, mockProfiles);
-      return currentUser?.following_ids.includes(profileId) ?? false;
-    }
     // In API mode, this would come from profile data
-    return apiProfile?.following_ids.includes(MOCK_CURRENT_USER_ID) ?? false;
-  }, [apiProfile, profileId, mockProfiles]);
+    return apiProfile?.following_ids.includes(1) ?? false;
+  }, [apiProfile]);
 
-  const isOwnProfile = profileId === MOCK_CURRENT_USER_ID;
+  const isOwnProfile = false; // Will be determined by actual user data
 
   const handleFollowToggle = useCallback(async () => {
     if (!profileId || isOwnProfile) return;
 
-    if (USE_MOCKS) {
-      setMockFollowLoading(true);
-      await mockDelay();
-
+    try {
       if (isFollowing) {
-        dispatch(unfollowProfile({ userId: MOCK_CURRENT_USER_ID, targetId: profileId }));
+        await unfollowProfileApi(profileId).unwrap();
       } else {
-        dispatch(followProfile({ userId: MOCK_CURRENT_USER_ID, targetId: profileId }));
+        await followProfileApi(profileId).unwrap();
       }
-
-      setMockFollowLoading(false);
-    } else {
-      try {
-        if (isFollowing) {
-          await unfollowProfileApi(profileId).unwrap();
-        } else {
-          await followProfileApi(profileId).unwrap();
-        }
-      } catch (error) {
-        console.error('Failed to toggle follow:', error);
-      }
+    } catch (error) {
+      console.error('Failed to toggle follow:', error);
     }
-  }, [profileId, isFollowing, isOwnProfile, followProfileApi, unfollowProfileApi, dispatch]);
+  }, [profileId, isFollowing, isOwnProfile, followProfileApi, unfollowProfileApi]);
 
   const handleBack = () => {
     navigate(-1);
@@ -350,32 +251,19 @@ try {
 
   // Calculate followers/following counts
   const followersCount = useMemo(() => {
-    if (USE_MOCKS) {
-      return mockProfiles.filter((p) => p.following_ids.includes(profileId)).length;
-    }
     return apiFollowers?.length ?? 0;
-  }, [apiFollowers, profileId, mockProfiles]);
+  }, [apiFollowers]);
 
   const followingCount = useMemo(() => {
-    if (USE_MOCKS) {
-      const profile = getProfileById(profileId, mockProfiles);
-      return profile?.following_ids.length ?? 0;
-    }
     return apiFollowing?.length ?? 0;
-  }, [apiFollowing, profileId, mockProfiles]);
+  }, [apiFollowing]);
 
   // Determine which data to use
-  const mockProfile = USE_MOCKS ? getProfileById(profileId, mockProfiles) ?? null : null;
-  const profile = USE_MOCKS ? mockProfile : (isMyProfileMode ? apiMyProfile : apiProfile) ?? null;
-  const mockProfilePosts = USE_MOCKS ? mockPosts.filter((p) => p.author === profileId) : [];
-  const posts = USE_MOCKS ? mockProfilePosts : apiPosts?.filter((p) => p.author === profileId) ?? [];
-  const isLoading = USE_MOCKS
-    ? mockLoading
-    : isMyProfileMode
-      ? apiMyProfileLoading
-      : apiProfileLoading;
-  const error = USE_MOCKS ? null : (isMyProfileMode ? null : apiProfileError);
-  const isSaving = USE_MOCKS ? mockSaving : apiSaving;
+  const profile = isMyProfileMode ? apiMyProfile : apiProfile ?? null;
+  const posts = apiPosts?.filter((p) => p.author === profileId) ?? [];
+  const isLoading = isMyProfileMode ? apiMyProfileLoading : apiProfileLoading;
+  const error = isMyProfileMode ? null : apiProfileError;
+  const isSaving = apiSaving;
 
   // Avatar URL to display in edit mode
   const avatarUrl = previewUrl || profile?.avatar;
@@ -475,7 +363,7 @@ try {
               />
             </FormGroup>
 
-            {/* NOVOS CAMPOS PARA SENHA */}
+            {/* PASSWORD FIELDS */}
             <FormGroup>
               <Label htmlFor="currentPass">Senha atual</Label>
               <Input
@@ -504,7 +392,6 @@ try {
                   setFormError(null);
                 }}
                 placeholder="Digite sua nova senha"
-                minLength={8}
                 fullWidth
               />
             </FormGroup>
@@ -521,18 +408,12 @@ try {
                   setFormError(null);
                 }}
                 placeholder="Confirme sua nova senha"
-                minLength={8}
                 fullWidth
               />
             </FormGroup>
 
-            <Button
-              type="submit"
-              fullWidth
-              isLoading={isSaving}
-              disabled={isSaving}
-            >
-              Salvar alterações
+            <Button type="submit" fullWidth disabled={isSaving}>
+              {isSaving ? 'Salvando...' : 'Salvar alterações'}
             </Button>
           </Form>
         </EditCard>
@@ -540,15 +421,10 @@ try {
     );
   }
 
-  // RENDER: Public Profile Mode (/profile/:id)
+  // RENDER: Public Profile View
   if (isLoading) {
     return (
       <Container>
-        <Header>
-          <BackButton onClick={handleBack}>
-            <BackIcon />
-          </BackButton>
-        </Header>
         <LoadingContainer>
           <Loader size="lg" />
         </LoadingContainer>
@@ -559,16 +435,9 @@ try {
   if (error) {
     return (
       <Container>
-        <Header>
-          <BackButton onClick={handleBack}>
-            <BackIcon />
-          </BackButton>
-        </Header>
         <ErrorMessage>
           Erro ao carregar o perfil.{' '}
-          <button onClick={() => window.location.reload()}>
-            Tentar novamente
-          </button>
+          <button onClick={() => window.location.reload()}>Tentar novamente</button>
         </ErrorMessage>
       </Container>
     );
@@ -577,11 +446,6 @@ try {
   if (!profile) {
     return (
       <Container>
-        <Header>
-          <BackButton onClick={handleBack}>
-            <BackIcon />
-          </BackButton>
-        </Header>
         <NotFoundMessage>Perfil não encontrado.</NotFoundMessage>
       </Container>
     );
@@ -599,18 +463,16 @@ try {
         </HeaderInfo>
       </Header>
 
-      <ProfileHeader>
+        <ProfileHeader>
         <AvatarSection>
           <AvatarWrapper>
-            <AvatarImage>
-              <Avatar src={profile.avatar} name={profile.display_name} size="xl" />
-            </AvatarImage>
+            <Avatar src={profile.avatar} name={profile.display_name} size="xl" />
           </AvatarWrapper>
           {!isOwnProfile && (
             <FollowButton
               isFollowing={isFollowing}
-              onToggle={() => void handleFollowToggle()}
-              isLoading={mockFollowLoading}
+              isLoading={false}
+              onToggle={handleFollowToggle}
             />
           )}
         </AvatarSection>
@@ -633,7 +495,10 @@ try {
       </ProfileHeader>
 
       <Tabs>
-        <Tab $active={activeTab === 'posts'} onClick={() => setActiveTab('posts')}>
+        <Tab
+          $active={activeTab === 'posts'}
+          onClick={() => setActiveTab('posts')}
+        >
           Posts
         </Tab>
         <Tab
@@ -653,29 +518,41 @@ try {
       {activeTab === 'posts' && (
         <PostsContainer>
           {posts.length === 0 ? (
-            <EmptyState>Este usuário ainda não publicou nada.</EmptyState>
+            <EmptyState>
+              {isOwnProfile ? 'Nenhum post ainda. Seja o primeiro a publicar!' : 'Nenhum post ainda.'}
+            </EmptyState>
           ) : (
             posts.map((post) => (
-              <PostCard
-                key={post.id}
-                post={post}
-                onLikeToggle={() => {}}
-              />
+              <PostCard key={post.id} post={post} />
             ))
           )}
         </PostsContainer>
       )}
 
       {activeTab === 'followers' && (
-        <PostsContainer>
-          <EmptyState>Lista de seguidores em breve.</EmptyState>
-        </PostsContainer>
+        <div>
+          {/* Followers list */}
+          {apiFollowers?.length === 0 ? (
+            <EmptyState>Nenhum seguidor ainda.</EmptyState>
+          ) : (
+            apiFollowers?.map((follower, index) => (
+              <div key={index}>{follower.username}</div>
+            ))
+          )}
+        </div>
       )}
 
       {activeTab === 'following' && (
-        <PostsContainer>
-          <EmptyState>Lista de quem segue em breve.</EmptyState>
-        </PostsContainer>
+        <div>
+          {/* Following list */}
+          {apiFollowing?.length === 0 ? (
+            <EmptyState>Nenhum seguindo ainda.</EmptyState>
+          ) : (
+            apiFollowing?.map((following, index) => (
+              <div key={index}>{following.username}</div>
+            ))
+          )}
+        </div>
       )}
     </Container>
   );

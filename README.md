@@ -56,13 +56,6 @@ Criar um arquivo `.env` na raiz do projeto:
 
 ```env
 VITE_API_URL=https://tweeter-backend-tex8.onrender.com
-VITE_USE_MOCKS=false
-```
-
-Ou copiar o arquivo `.env.example` e renomear para `.env`:
-
-```bash
-cp .env.example .env
 ```
 
 ### 4. Executar em modo de desenvolvimento
@@ -91,7 +84,6 @@ Os arquivos buildados estarão na pasta `dist/`
 4. Importar o repositório do GitHub
 5. Configurar as variáveis de ambiente:
    - `VITE_API_URL`: `https://tweeter-backend-tex8.onrender.com`
-   - `VITE_USE_MOCKS`: `false`
 6. Clicar em "Deploy"
 
 ### Deploy no Netlify
@@ -117,7 +109,6 @@ tweeter-frontend/
 │   ├── components/        # Componentes reutilizáveis
 │   ├── features/         # Slices e APIs do Redux
 │   ├── hooks/            # Hooks customizados
-│   ├── mocks/            # Dados de mock para desenvolvimento
 │   ├── pages/            # Páginas da aplicação
 │   ├── routes/           # Rotas da aplicação
 │   ├── styles/           # Estilos globais e tema
@@ -125,6 +116,7 @@ tweeter-frontend/
 │   └── utils/           # Funções utilitárias
 ├── public/              # Arquivos estáticos
 ├── docs/                # Documentação
+├── plans/              # Planos de melhoria
 ├── .env                # Variáveis de ambiente (não commitado)
 ├── .env.example        # Exemplo de variáveis de ambiente
 ├── package.json
@@ -181,19 +173,13 @@ tweeter-frontend/
 10. Clicar em "Salvar alterações"
 11. Verificar se a senha foi atualizada
 
-### Teste de Página /explore
-1. Clicar em "Explorar" no menu lateral
-2. Verificar se todos os posts aparecem
-3. Criar um post na página de exploração
-4. Verificar se o post aparece
-
 ## 📝 Requisitos do Curso Atendidos
 
 - ✅ Sistema de autenticação e criação de conta
 - ✅ Configuração de perfil (foto, nome, senha)
 - ✅ Sistema de seguir e feed de notícias
 - ✅ Interações nas postagens (curtidas e comentários)
-- ✅ Deploy e entrega final (após fazer deploy)
+- ✅ Deploy e entrega final (após fazer deploy do frontend)
 
 ## 👤 Autor
 
