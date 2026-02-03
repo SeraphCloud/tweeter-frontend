@@ -23,5 +23,16 @@ dist-ssr
 *.sln
 *.sw?
 
-# Env
+# Environment variables
 .env
+.env.local
+.env.production
+.env.development
+
+# Documentation (not to be committed)
+docs/
+plans/
+
+# Test coverage
+coverage
+*.lcov

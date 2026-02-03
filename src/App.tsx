@@ -1,30 +1,20 @@
-import { Route, Routes } from "react-router-dom";
-import { ProtectedRoute } from "./auth/ProtectedRoute";
-import HomeRedirect from "./HomeRedirect";
-import Feed from "./pages/Feed";
-import ForYou from "./pages/ForYou";
-import Login from "./pages/Login";
-import Profile from "./pages/Profile";
-import Register from "./pages/Register";
+import { Provider } from 'react-redux';
+import { ThemeProvider } from 'styled-components';
+import { RouterProvider } from 'react-router-dom';
+import { GlobalStyle } from './styles/GlobalStyle';
+import { theme } from './styles/theme';
+import { router } from './routes/routes';
+import { store } from './app/store';
 
-export default function App() {
-	return (
-		<Routes>
-			<Route path="/login" element={<Login />} />
-			<Route path="/register" element={<Register />} />
-			<Route
-				path="/for-you"
-				element={<ProtectedRoute>{<ForYou />}</ProtectedRoute>}
-			/>
-			<Route path="/" element={<HomeRedirect />} />
-			<Route
-				path="/feed"
-				element={<ProtectedRoute>{<Feed />}</ProtectedRoute>}
-			/>
-			<Route
-				path="/profile/:id"
-				element={<ProtectedRoute>{<Profile />}</ProtectedRoute>}
-			/>
-		</Routes>
-	);
+function App() {
+  return (
+    <Provider store={store}>
+      <ThemeProvider theme={theme}>
+        <GlobalStyle />
+        <RouterProvider router={router} />
+      </ThemeProvider>
+    </Provider>
+  );
 }
+
+export default App;
