@@ -104,21 +104,6 @@ export default function Profile() {
   const [currentPass, setCurrentPass] = useState('');
   const [newPass, setNewPass] = useState('');
   const [confirmPass, setConfirmPass] = useState('');
-  
-  // Password state
-  const [currentPass, setCurrentPass] = useState('');
-  const [newPass, setNewPass] = useState('');
-  const [confirmPass, setConfirmPass] = useState('');
-  
-  // Password state
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  
-  // Password state
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
 
   // RTK Query hooks (used when USE_MOCKS=false)
   const {
@@ -317,7 +302,7 @@ try {
 }
 }
 },
-[displayName, selectedFile, previewUrl, updateProfileApi, mockProfiles, dispatch, currentPass, newPass, confirmPass]
+[displayName, selectedFile, previewUrl, updateProfileApi, mockProfiles, dispatch, currentPass, setCurrentPass, newPass, setNewPass, confirmPass, setConfirmPass]
 );
 
   // Determine if current user is following this profile
