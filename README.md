@@ -97,7 +97,7 @@ Os arquivos buildados estarão na pasta `dist/`
 
 ## 📱 Acesso Online
 
-**Frontend:** [LINK DO DEPLOY] (após fazer deploy)
+**Frontend:** https://tweeter-frontend-eight.vercel.app/
 **Backend:** https://tweeter-backend-tex8.onrender.com
 
 ## 📂 Estrutura do Projeto
