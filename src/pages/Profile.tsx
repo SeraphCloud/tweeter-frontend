@@ -25,7 +25,6 @@ export default function Profile() {
 	const [searchResults, setSearchResults] = useState<UserProfile[]>([]);
 	const [following, setFollowing] = useState<UserProfile[]>([]);
 	const [followers, setFollowers] = useState<UserProfile[]>([]);
-	const [suggested, setSuggested] = useState<UserProfile[]>([]);
 
 	// Preenche o formulário com os dados atuais do usuário
 	useEffect(() => {
@@ -39,14 +38,13 @@ export default function Profile() {
 	const fetchFollowData = async () => {
 		if (!user) return;
 		try {
-			const [followingRes, followersRes, suggestedRes] = await Promise.all([
+			const [followingRes, followersRes] = await Promise.all([
 				api.get(`/users/${user.id}/following/`),
 				api.get(`/users/${user.id}/followers/`),
 				api.get("/users/suggested/"),
 			]);
 			setFollowing(followingRes.data);
 			setFollowers(followersRes.data);
-			setSuggested(suggestedRes.data);
 		} catch {
 			// silencia erros de carregamento
 		}
